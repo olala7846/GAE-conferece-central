@@ -9,10 +9,6 @@ $Id: conference.py,v 1.25 2014/05/24 23:42:19 wesc Exp wesc $
 created by wesc on 2014 apr 21
 
 """
-
-__author__ = 'wesc+api@google.com (Wesley Chun)'
-
-
 from datetime import datetime
 
 import endpoints
@@ -44,6 +40,7 @@ from settings import ANDROID_AUDIENCE
 
 from utils import getUserId
 
+
 EMAIL_SCOPE = endpoints.EMAIL_SCOPE
 API_EXPLORER_CLIENT_ID = endpoints.API_EXPLORER_CLIENT_ID
 MEMCACHE_ANNOUNCEMENTS_KEY = "RECENT_ANNOUNCEMENTS"
@@ -55,24 +52,24 @@ DEFAULTS = {
     "city": "Default City",
     "maxAttendees": 0,
     "seatsAvailable": 0,
-    "topics": [ "Default", "Topic" ],
+    "topics": ["Default", "Topic"],
 }
 
 OPERATORS = {
-            'EQ':   '=',
-            'GT':   '>',
-            'GTEQ': '>=',
-            'LT':   '<',
-            'LTEQ': '<=',
-            'NE':   '!='
-            }
+    'EQ':   '=',
+    'GT':   '>',
+    'GTEQ': '>=',
+    'LT':   '<',
+    'LTEQ': '<=',
+    'NE':   '!='
+}
 
-FIELDS =    {
-            'CITY': 'city',
-            'TOPIC': 'topics',
-            'MONTH': 'month',
-            'MAX_ATTENDEES': 'maxAttendees',
-            }
+FIELDS = {
+    'CITY': 'city',
+    'TOPIC': 'topics',
+    'MONTH': 'month',
+    'MAX_ATTENDEES': 'maxAttendees',
+}
 
 CONF_GET_REQUEST = endpoints.ResourceContainer(
     message_types.VoidMessage,
@@ -87,8 +84,11 @@ CONF_POST_REQUEST = endpoints.ResourceContainer(
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-@endpoints.api(name='conference', version='v1', audiences=[ANDROID_AUDIENCE],
-    allowed_client_ids=[WEB_CLIENT_ID, API_EXPLORER_CLIENT_ID, ANDROID_CLIENT_ID, IOS_CLIENT_ID],
+@endpoints.api(
+    name='conference', version='v1', audiences=[ANDROID_AUDIENCE],
+    allowed_client_ids=[
+        WEB_CLIENT_ID, API_EXPLORER_CLIENT_ID,
+        ANDROID_CLIENT_ID, IOS_CLIENT_ID],
     scopes=[EMAIL_SCOPE])
 class ConferenceApi(remote.Service):
     """Conference API v0.1"""
@@ -112,9 +112,10 @@ class ConferenceApi(remote.Service):
         cf.check_initialized()
         return cf
 
-
     def _createConferenceObject(self, request):
-        """Create or update Conference object, returning ConferenceForm/request."""
+        """
+        Create or update Conference object, returning ConferenceForm/request.
+        """
         # preload necessary data items
         user = endpoints.get_current_user()
         if not user:
@@ -125,7 +126,9 @@ class ConferenceApi(remote.Service):
             raise endpoints.BadRequestException("Conference 'name' field required")
 
         # copy ConferenceForm/ProtoRPC Message into dict
-        data = {field.name: getattr(request, field.name) for field in request.all_fields()}
+        data = {
+            field.name: getattr(request, field.name) for field in request.all_fields()
+        }
         del data['websafeKey']
         del data['organizerDisplayName']
 
