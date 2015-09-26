@@ -1,4 +1,6 @@
-App Engine application for the Udacity training course.
+# Conference Centrol
+This is a App Engine application for the Udacity training course.
+Cloned and modified by olala7846@gmail.com
 
 ## Products
 - [App Engine][1]
