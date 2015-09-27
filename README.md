@@ -25,6 +25,10 @@ Cloned and modified by olala7846@gmail.com
 1. (Optional) Generate your client library(ies) with [the endpoints tool][6].
 1. Deploy your application.
 
+## Test instruction
+No unit test implemented, but if you want to test locally,
+use `/mock/mock_conference_data` to test your UI
+
 ## Design Choices
 ### Session
 * The `Session` class was created to be a child of `Conference` class thus we can easily query all sessions in the same conference.

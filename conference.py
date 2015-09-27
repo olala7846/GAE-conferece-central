@@ -435,6 +435,70 @@ class ConferenceApi(remote.Service):
         return StringMessage(data=memcache.get(MEMCACHE_ANNOUNCEMENTS_KEY) or "")
 
 
+# - - - Data Mock - - - - - - - - - - - - - - - - - - - -
+
+    @staticmethod
+    def _mockConferenceData():
+        # 0. remove all user/conference/session
+        profiles = Profile.query()
+        for p in profiles:
+            p.key.delete()
+
+        conferences = Conference.query()
+        for c in conferences:
+            c.key.delete()
+
+        sessions = Session.query()
+        for s in sessions:
+            s.key.delete()
+
+        # 1. mock user profile
+        email = 'olala7846@gmail'
+        u_id = email  # mock email as u_id
+        p_key = ndb.Key(Profile, u_id)
+        profile = p_key.get()
+        if not profile:
+            profile = Profile(
+                key=p_key,
+                displayName='Olala7846',
+                mainEmail=email,
+                teeShirtSize=str(TeeShirtSize.NOT_SPECIFIED),
+            )
+            profile.put()
+
+        # 2. mock 3 Conference under user
+        for i in range(1, 4):
+            c_id = Conference.allocate_ids(size=1, parent=p_key)[0]
+            c_key = ndb.Key(Conference, c_id, parent=p_key)
+            conference = Conference(
+                name='Pyconf{}'.format(i),
+                description='Python Conference 2015 - {}'.format(i),
+                organizerUserId=u_id,
+                topics=['Conputer Programming', 'Python'],
+                city='Taipei',
+                startDate=datetime.now(),
+                month=7,
+                endDate=datetime.now(),
+                maxAttendees=200,
+                seatsAvailable=200,
+            )
+            conference.put()
+
+            # 3. mock 5 sessions under each conference
+            for j in range(1, 6):
+                s_id = Session.allocate_ids(size=1, parent=c_key)[0]
+                s_key = ndb.Key(Session, s_id, parent=c_key)
+                session = Session(
+                    name='conference {} session {}'.format(i, j),
+                    highlights='highlights about session {}'.format(j),
+                    speakerName='Guido van Rossum {}'.format(j),
+                    duration=90,
+                    date=datetime.now(),
+                    startTime=datetime.now().time(),
+                )
+                session.put()
+
+
 # - - - Registration - - - - - - - - - - - - - - - - - - - -
 
     @ndb.transactional(xg=True)

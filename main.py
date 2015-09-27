@@ -14,6 +14,7 @@ import webapp2
 from google.appengine.api import app_identity
 from google.appengine.api import mail
 from conference import ConferenceApi
+from models import Profile, Conference, Session
 
 
 class SetAnnouncementHandler(webapp2.RequestHandler):
@@ -37,7 +38,16 @@ class SendConfirmationEmailHandler(webapp2.RequestHandler):
         )
 
 
+class MockConferenceData(webapp2.RequestHandler):
+    def get(self):
+        """Mock objects for testing"""
+        ConferenceApi._mockConferenceData()
+        self.response.set_status(200)
+        self.response.write('Mock Success')
+
+
 app = webapp2.WSGIApplication([
     ('/crons/set_announcement', SetAnnouncementHandler),
     ('/tasks/send_confirmation_email', SendConfirmationEmailHandler),
+    ('/mock/mock_conference_data', MockConferenceData),
 ], debug=True)
