@@ -128,7 +128,7 @@ class Session(ndb.Model):
     Session -- session in a conference
     Should have parent/child relationship with Conference
     """
-    name = ndb.StringProperty()
+    name = ndb.StringProperty(required=True)
     highlights = ndb.TextProperty()
     speakerName = ndb.StringProperty()
     duration = ndb.IntegerProperty()  # duration in minutes
@@ -139,13 +139,14 @@ class Session(ndb.Model):
 
 class SessionForm(messages.Message):
     """SessionForm -- Session outbound form message"""
-    name = message.StringField(1)
-    highlights = message.StringField(2)
-    speakerName = message.StringField(3)
-    duration = message.IntegerField(4)
-    sessionType = message.EnumField('SessionType', 5)
-    date = message.StringField(6)  # DateProperty()
-    startTime = message.StringField(7)  # TimeProperty()
+    name = messages.StringField(1, required=True)
+    highlights = messages.StringField(2)
+    speakerName = messages.StringField(3)
+    duration = messages.IntegerField(4)
+    sessionType = messages.EnumField('SessionType', 5, default='NOT_SPECIFIED')
+    date = messages.StringField(6)  # DateProperty()
+    startTime = messages.StringField(7)  # TimeProperty()
+    websafeKey = messages.StringField(8)  # ndb conference id in websafe form
 
 
 class SessionType(messages.Enum):

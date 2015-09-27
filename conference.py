@@ -21,17 +21,11 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import ndb
 
 from models import ConflictException
-from models import Profile
-from models import ProfileMiniForm
-from models import ProfileForm
-from models import StringMessage
-from models import BooleanMessage
-from models import Conference
-from models import ConferenceForm
-from models import ConferenceForms
-from models import ConferenceQueryForm
-from models import ConferenceQueryForms
-from models import TeeShirtSize
+from models import Profile, ProfileForm, ProfileMiniForm, TeeShirtSize
+from models import StringMessage, BooleanMessage
+from models import Conference, ConferenceForm, ConferenceForms
+from models import ConferenceQueryForm, ConferenceQueryForms
+from models import Session, SessionForm, SessionType
 
 from settings import WEB_CLIENT_ID
 from settings import ANDROID_CLIENT_ID
@@ -78,6 +72,11 @@ CONF_GET_REQUEST = endpoints.ResourceContainer(
 
 CONF_POST_REQUEST = endpoints.ResourceContainer(
     ConferenceForm,
+    websafeConferenceKey=messages.StringField(1),
+)
+
+SESSION_POST_REQUEST = endpoints.ResourceContainer(
+    SessionForm,
     websafeConferenceKey=messages.StringField(1),
 )
 
@@ -174,9 +173,6 @@ class ConferenceApi(remote.Service):
         if not user:
             raise endpoints.UnauthorizedException('Authorization required')
         user_id = getUserId(user)
-
-        # copy ConferenceForm/ProtoRPC Message into dict
-        data = {field.name: getattr(request, field.name) for field in request.all_fields()}
 
         # update existing conference
         conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
@@ -495,7 +491,7 @@ class ConferenceApi(remote.Service):
         http_method='GET', name='getConferencesToAttend')
     def getConferencesToAttend(self, request):
         """Get list of conferences that user has registered for."""
-        prof = self._getProfileFromUser() # get user Profile
+        prof = self._getProfileFromUser()  # get user Profile
         conf_keys = [ndb.Key(urlsafe=wsck) for wsck in prof.conferenceKeysToAttend]
         conferences = ndb.get_multi(conf_keys)
 
@@ -529,6 +525,67 @@ class ConferenceApi(remote.Service):
     def unregisterFromConference(self, request):
         """Unregister user for selected conference."""
         return self._conferenceRegistration(request, reg=False)
+
+
+# - - - Sessions - - - - - - - - - - - - - - - - - - - -
+
+    def _createSessionObject(self, request):
+        """
+        Creates Session under provided conference
+        websafeConferenceKey - key of parent Conference
+        duration - session duration in minutes
+        other fields are self explanatory
+        """
+        user = endpoints.get_current_user()
+        if not user:
+            raise endpoints.UnauthorizedException('Authorization required')
+        user_id = getUserId(user)
+
+        # update existing conference
+        c_key = ndb.Key(urlsafe=request.websafeConferenceKey)
+        conf = c_key.get()
+        # check that conference exists
+        if not conf:
+            raise endpoints.NotFoundException(
+                'No conference found with key: %s' % request.websafeConferenceKey)
+
+        # check that user is owner
+        if user_id != conf.organizerUserId:
+            raise endpoints.ForbiddenException(
+                'Only the owner can create session in this conference.')
+
+        # copy ConferenceForm/ProtoRPC Message into dict
+        data = {
+            field.name: getattr(request, field.name) for field in request.all_fields()
+        }
+        del data['websafeKey']
+
+        # convert date/time from strings to Date/Time objects
+        if data['date']:
+            data['date'] = datetime.strptime(data['date'][:10], "%Y-%m-%d").date()
+        else:
+            date['date'] = conf.startDate
+
+        if data['startTime']:
+            data['endDate'] = datetime.strptime(data['endDate'][:10], "%H-%M-%S").time()
+
+        # generate Session Key based on user ID and Conference
+        # ID based on Conference key get Session key from ID
+        s_id = Session.allocate_ids(size=1, parent=c_key)[0]
+        s_key = ndb.Key(Session, s_id, parent=c_key)
+        data['key'] = c_key
+
+        # create Session, send email to organizer confirming
+        # creation of Conference & return (modified) ConferenceForm
+        Session(**data).put()
+        return StringMessage(data="success")
+
+    @endpoints.method(
+        SESSION_POST_REQUEST, StringMessage,
+        path='session', http_method='POST', name='createSession')
+    def createSession(self, request):
+        """Creates session under certain Conference"""
+        self._createSessionObject(request)
 
 
 api = endpoints.api_server([ConferenceApi])  # register API
