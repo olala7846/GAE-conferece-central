@@ -598,6 +598,8 @@ class ConferenceApi(remote.Service):
         Creates Session under provided conference
         websafeConferenceKey - key of parent Conference
         duration - session duration in minutes
+        date - formated YYYY-MM-DD
+        time - formated HH:MM:SS
         other fields are self explanatory
         """
         user = endpoints.get_current_user()
@@ -622,6 +624,7 @@ class ConferenceApi(remote.Service):
         data = {
             field.name: getattr(request, field.name) for field in request.all_fields()
         }
+        del data['websafeConferenceKey']
         del data['websafeKey']
 
         # convert date/time from strings to Date/Time objects
@@ -631,13 +634,13 @@ class ConferenceApi(remote.Service):
             date['date'] = conf.startDate
 
         if data['startTime']:
-            data['endDate'] = datetime.strptime(data['endDate'][:10], "%H-%M-%S").time()
+            data['endDate'] = datetime.strptime(data['endDate'][:8], "%H:%M:%S").time()
 
         # generate Session Key based on user ID and Conference
         # ID based on Conference key get Session key from ID
         s_id = Session.allocate_ids(size=1, parent=c_key)[0]
         s_key = ndb.Key(Session, s_id, parent=c_key)
-        data['key'] = c_key
+        data['key'] = s_key
 
         # create Session, send email to organizer confirming
         # creation of Conference & return (modified) ConferenceForm
@@ -649,7 +652,7 @@ class ConferenceApi(remote.Service):
         path='session', http_method='POST', name='createSession')
     def createSession(self, request):
         """Creates session under certain Conference"""
-        self._createSessionObject(request)
+        return self._createSessionObject(request)
 
 
 api = endpoints.api_server([ConferenceApi])  # register API

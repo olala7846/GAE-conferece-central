@@ -143,7 +143,7 @@ class SessionForm(messages.Message):
     highlights = messages.StringField(2)
     speakerName = messages.StringField(3)
     duration = messages.IntegerField(4)
-    sessionType = messages.EnumField('SessionType', 5, default='NOT_SPECIFIED')
+    sessionType = messages.EnumField('SessionType', 5)
     date = messages.StringField(6)  # DateProperty()
     startTime = messages.StringField(7)  # TimeProperty()
     websafeKey = messages.StringField(8)  # ndb conference id in websafe form
