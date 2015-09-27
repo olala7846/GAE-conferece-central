@@ -21,28 +21,12 @@ class ConflictException(endpoints.ServiceException):
     http_status = httplib.CONFLICT
 
 
-# ndb classes
-
 class Profile(ndb.Model):
     """Profile -- User profile object"""
     displayName = ndb.StringProperty()
     mainEmail = ndb.StringProperty()
     teeShirtSize = ndb.StringProperty(default='NOT_SPECIFIED')
     conferenceKeysToAttend = ndb.StringProperty(repeated=True)
-
-
-class Conference(ndb.Model):
-    """Conference -- Conference object"""
-    name = ndb.StringProperty(required=True)
-    description = ndb.StringProperty()
-    organizerUserId = ndb.StringProperty()
-    topics = ndb.StringProperty(repeated=True)
-    city = ndb.StringProperty()
-    startDate = ndb.DateProperty()
-    month = ndb.IntegerProperty()
-    endDate = ndb.DateProperty()
-    maxAttendees = ndb.IntegerProperty()
-    seatsAvailable = ndb.IntegerProperty()
 
 
 # protorpc classes
@@ -69,6 +53,20 @@ class StringMessage(messages.Message):
 class BooleanMessage(messages.Message):
     """BooleanMessage-- outbound Boolean value message"""
     data = messages.BooleanField(1)
+
+
+class Conference(ndb.Model):
+    """Conference -- Conference object"""
+    name = ndb.StringProperty(required=True)
+    description = ndb.StringProperty()
+    organizerUserId = ndb.StringProperty()
+    topics = ndb.StringProperty(repeated=True)
+    city = ndb.StringProperty()
+    startDate = ndb.DateProperty()
+    month = ndb.IntegerProperty()
+    endDate = ndb.DateProperty()
+    maxAttendees = ndb.IntegerProperty()
+    seatsAvailable = ndb.IntegerProperty()
 
 
 class ConferenceForm(messages.Message):
@@ -123,3 +121,36 @@ class ConferenceQueryForms(messages.Message):
     ConferenceQueryForms -- multiple ConferenceQueryForm inbound form message
     """
     filters = messages.MessageField(ConferenceQueryForm, 1, repeated=True)
+
+
+class Session(ndb.Model):
+    """
+    Session -- session in a conference
+    Should have parent/child relationship with Conference
+    """
+    name = ndb.StringProperty()
+    highlights = ndb.TextProperty()
+    speakerName = ndb.StringProperty()
+    duration = ndb.IntegerProperty()  # duration in minutes
+    sessionType = ndb.StringProperty(default='NOT_SPECIFIED')
+    date = ndb.DateProperty()
+    startTime = ndb.TimeProperty()
+
+
+class SessionForm(messages.Message):
+    """SessionForm -- Session outbound form message"""
+    name = message.StringField(1)
+    highlights = message.StringField(2)
+    speakerName = message.StringField(3)
+    duration = message.IntegerField(4)
+    sessionType = message.EnumField('SessionType', 5)
+    date = message.StringField(6)  # DateProperty()
+    startTime = message.StringField(7)  # TimeProperty()
+
+
+class SessionType(messages.Enum):
+    """SessionType -- session type in conference"""
+    NOT_SPECIFIED = 1
+    KEY_NOTE = 2
+    LECTURE = 3
+    WORKSHOP = 4

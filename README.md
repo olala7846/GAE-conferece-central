@@ -25,6 +25,12 @@ Cloned and modified by olala7846@gmail.com
 1. (Optional) Generate your client library(ies) with [the endpoints tool][6].
 1. Deploy your application.
 
+## Design Choices
+### Session
+* The `Session` class was created to be a child of `Conference` class thus we can easily query all sessions in the same conference.
+* `Session.sessionType` is a `StringProperty()` as ndb model and `enumFeild()` as protorpc message
+* `date` and `time` are stored seperately in ndb as `DateProperty()` and `TimeProperty()` 
+
 
 [1]: https://developers.google.com/appengine
 [2]: http://python.org
