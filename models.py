@@ -173,3 +173,8 @@ class SessionTypeForm(messages.Message):
 class SessionSpeakerForm(messages.Message):
     """SessionSpeakerForm -- query session by speakerName"""
     speakerName = messages.StringField(1)
+
+
+class UpcomingConferencesForm(messages.Message):
+    """UpcomingConferencesForm -- query all upcoming conferences"""
+    count = messages.IntegerField(1)  # number of conferences to return

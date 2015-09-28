@@ -2,13 +2,9 @@
 This is a App Engine application for the Udacity training course.
 Cloned and modified by olala7846@gmail.com
 
-## Products
+## Framework and language
 - [App Engine][1]
-
-## Language
 - [Python][2]
-
-## APIs
 - [Google Cloud Endpoints][3]
 
 ## Setup Instructions
@@ -29,13 +25,21 @@ Cloned and modified by olala7846@gmail.com
 No unit test implemented, but if you want to test locally,
 use `/mock/mock_conference_data` to test your UI
 
-## Design Choices
-### Session
+## Udacity project Detail
+
+### Task 1: Session
 * The `Session` class was created to be a child of `Conference` class thus we can easily query all sessions in the same conference.
 * `Session.sessionType` is a `StringProperty()` as ndb model and `enumFeild()` as protorpc message
 * `date` and `time` are stored seperately in ndb as `DateProperty()` and `TimeProperty()` 
 
+### Task 2: Wishlist
+* `addSessionToWishlist` implemented
+* `getSessionsInWishlist` implemented
 
+### Task 3: Query and indices
+#### Additional querry
+* `upcomingConferences` shows the latest conferences which haven't started order by time
+* ``
 [1]: https://developers.google.com/appengine
 [2]: http://python.org
 [3]: https://developers.google.com/appengine/docs/python/endpoints/

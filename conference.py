@@ -9,7 +9,7 @@ $Id: conference.py,v 1.25 2014/05/24 23:42:19 wesc Exp wesc $
 created by wesc on 2014 apr 21
 
 """
-from datetime import datetime
+from datetime import datetime, date
 
 import endpoints
 from protorpc import messages
@@ -25,6 +25,7 @@ from models import Profile, ProfileForm, ProfileMiniForm, TeeShirtSize
 from models import StringMessage, BooleanMessage
 from models import Conference, ConferenceForm, ConferenceForms
 from models import ConferenceQueryForm, ConferenceQueryForms
+from models import UpcomingConferencesForm
 from models import Session, SessionForm, SessionType
 from models import SessionForms, SessionTypeForm, SessionSpeakerForm
 
@@ -313,7 +314,7 @@ class ConferenceApi(remote.Service):
 
         # need to fetch organiser displayName from profiles
         # get all keys and use get_multi for speed
-        organisers = [(ndb.Key(Profile, conf.organizerUserId)) for conf in conferences]
+        organisers = [ndb.Key(Profile, conf.organizerUserId) for conf in conferences]
         profiles = ndb.get_multi(organisers)
 
         # put display names in a dict for easier fetching
@@ -323,8 +324,7 @@ class ConferenceApi(remote.Service):
 
         # return individual ConferenceForm object per Conference
         return ConferenceForms(
-            items=[self._copyConferenceToForm(conf, names[conf.organizerUserId]) for conf in \
-            conferences]
+            items=[self._copyConferenceToForm(conf, names[conf.organizerUserId]) for conf in conferences]
         )
 
 
@@ -570,8 +570,7 @@ class ConferenceApi(remote.Service):
 
         # return set of ConferenceForm objects per Conference
         return ConferenceForms(
-            items=[self._copyConferenceToForm(conf, names[conf.organizerUserId])\
-                for conf in conferences]
+            items=[self._copyConferenceToForm(conf, names[conf.organizerUserId]) for conf in conferences]
         )
 
     @endpoints.method(
@@ -753,5 +752,37 @@ class ConferenceApi(remote.Service):
             items=[self._copySessionToForm(session) for session in sessions]
         )
 
+
+# - - - Additional Queries (Task 3)- - - - - - - - - - - - - - - - - - - -
+
+    @endpoints.method(
+        UpcomingConferencesForm, ConferenceForms,
+        path='getUpcomingConferences', http_method='GET',
+        name='getUpcomingConferences'
+    )
+    def getUpcomingConferences(self, request):
+        count = 10  # default get 10 conferences
+        if request.count and request.count > 0:
+            count = request.count
+
+        date_today = date.today()
+        conferences = Conference.query().\
+            filter(Conference.startDate > date_today).\
+            order(Conference.startDate).\
+            fetch(count)
+
+        # get organizers
+        organisers = [ndb.Key(Profile, conf.organizerUserId) for conf in conferences]
+        profiles = ndb.get_multi(organisers)
+
+        # put display names in a dict for easier fetching
+        names = {}
+        for profile in profiles:
+            names[profile.key.id()] = profile.displayName
+
+        # return set of ConferenceForm objects per Conference
+        return ConferenceForms(
+            items=[self._copyConferenceToForm(conf, names[conf.organizerUserId]) for conf in conferences]
+        )
 
 api = endpoints.api_server([ConferenceApi])  # register API
