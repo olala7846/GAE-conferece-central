@@ -481,6 +481,7 @@ class ConferenceApi(remote.Service):
                 endDate=datetime.now(),
                 maxAttendees=200,
                 seatsAvailable=200,
+                key=c_key,
             )
             conference.put()
 
@@ -495,6 +496,7 @@ class ConferenceApi(remote.Service):
                     duration=90,
                     date=datetime.now(),
                     startTime=datetime.now().time(),
+                    key=s_key,
                 )
                 session.put()
 
@@ -659,11 +661,14 @@ class ConferenceApi(remote.Service):
         for field in sf.all_fields():
             if hasattr(session, field.name):
                 if field.name in ['date', 'startTime']:
-                    setattr(cf, field.name, str(getattr(conf, field.name)))
+                    setattr(sf, field.name, str(getattr(session, field.name)))
+                elif field.name == 'sessionType':
+                    setattr(sf, field.name, getattr(SessionType, getattr(session, field.name)))
                 else:
-                    setattr(cf, field.name, getattr(conf, field.name))
+                    setattr(sf, field.name, getattr(session, field.name))
             elif field.name == "websafeKey":
-                setattr(cf, field.name, conf.key.urlsafe())
+                setattr(sf, field.name, session.key.urlsafe())
+        return sf
 
     @endpoints.method(
         CONF_GET_REQUEST, SessionForms,
