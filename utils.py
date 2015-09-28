@@ -64,3 +64,20 @@ def getConferenceFromRequest(request):
             'No conference found with key: %s' % wsck)
 
     return conf
+
+
+def getSessionFromRequest(request):
+    """
+    Validates and gets session by 'websafeSessionKey' in request
+    Throws NotFoundException
+    """
+    wssk = getattr(request, 'websafeSessionKey')
+    if not wssk:
+        raise endpoints.NotFoundException('No session key provided')
+
+    session = ndb.Key(urlsafe=wssk).get()
+    if not session:
+        raise endpoints.NotFoundException(
+            'No conference foud with key: %s' % wssk)
+
+    return session

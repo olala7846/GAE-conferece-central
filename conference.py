@@ -33,7 +33,7 @@ from settings import ANDROID_CLIENT_ID
 from settings import IOS_CLIENT_ID
 from settings import ANDROID_AUDIENCE
 
-from utils import getUserId, getConferenceFromRequest
+from utils import getUserId, getConferenceFromRequest, getSessionFromRequest
 
 
 EMAIL_SCOPE = endpoints.EMAIL_SCOPE
@@ -84,6 +84,11 @@ SESSION_POST_REQUEST = endpoints.ResourceContainer(
 GET_CONF_SESSION_BY_TYPE_REQUEST = endpoints.ResourceContainer(
     SessionTypeForm,
     websafeConferenceKey=messages.StringField(1),
+)
+
+WISHLIST_ADD_REQUEST = endpoints.ResourceContainer(
+    message_types.VoidMessage,
+    websafeSessionKey=messages.StringField(1),
 )
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -586,7 +591,7 @@ class ConferenceApi(remote.Service):
         return self._conferenceRegistration(request, reg=False)
 
 
-# - - - Sessions - - - - - - - - - - - - - - - - - - - -
+# - - - Sessions (Task 1)- - - - - - - - - - - - - - - - - - - -
 
     def _createSessionObject(self, request):
         """
@@ -700,6 +705,36 @@ class ConferenceApi(remote.Service):
         return SessionForms(
             items=[self._copySessionToForm(session) for session in sessions]
         )
+
+# - - - WishList (Task 2)- - - - - - - - - - - - - - - - - - - -
+
+    @ndb.transactional(xg=True)
+    def _addSessionToWishList(self, request):
+        """
+        Adds seession to user profile wish list
+        """
+        session = getSessionFromRequest(request)
+        wssk = session.key.urlsafe()
+        prof = self._getProfileFromUser()
+
+        if wssk in prof.sessionWishList:
+            raise ConflictException(
+                "You have already registered for this conference")
+
+        prof.sessionWishList.append(wssk)
+        prof.put()
+        return StringMessage(data="success")
+
+    @endpoints.method(
+        WISHLIST_ADD_REQUEST, StringMessage,
+        path='addSessionToWishlist', http_method='POST',
+        name='addSessionToWishlist'
+    )
+    def addSessionToWishlist(self, request):
+        """
+        Adds the target session to user's wish list
+        """
+        return self._addSessionToWishList(request)
 
 
 api = endpoints.api_server([ConferenceApi])  # register API
