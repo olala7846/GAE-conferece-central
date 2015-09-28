@@ -26,7 +26,7 @@ from models import StringMessage, BooleanMessage
 from models import Conference, ConferenceForm, ConferenceForms
 from models import ConferenceQueryForm, ConferenceQueryForms
 from models import Session, SessionForm, SessionType
-from models import SessionForms, SessionMiniForm
+from models import SessionForms, SessionTypeForm, SessionSpeakerForm
 
 from settings import WEB_CLIENT_ID
 from settings import ANDROID_CLIENT_ID
@@ -82,7 +82,7 @@ SESSION_POST_REQUEST = endpoints.ResourceContainer(
 )
 
 GET_CONF_SESSION_BY_TYPE_REQUEST = endpoints.ResourceContainer(
-    SessionMiniForm,
+    SessionTypeForm,
     websafeConferenceKey=messages.StringField(1),
 )
 
@@ -675,10 +675,28 @@ class ConferenceApi(remote.Service):
         path='getConferenceSessionsByType', http_method='POST',
         name='getConferenceSessionsByType')
     def getConferenceSessionsByType(self, request):
-        """Gets sessions in conference of the specified type"""
+        """
+        Gets sessions in conference of the specified type
+
+        """
         conf = getConferenceFromRequest(request)
         sessions = Session.query(ancestor=conf.key).\
             filter(Session.sessionType == request.sessionType.name)
+        return SessionForms(
+            items=[self._copySessionToForm(session) for session in sessions]
+        )
+
+    @endpoints.method(
+        SessionSpeakerForm, SessionForms,
+        path='getSessionsBySpeaker', http_method='POST',
+        name='getSessionsBySpeaker')
+    def getSessionsBySpeaker(self, request):
+        """
+        Gets all sessions with the specified speaker name
+        sessionType - will be ignored
+        """
+        sessions = Session.query().\
+            filter(Session.speakerName == request.speakerName)
         return SessionForms(
             items=[self._copySessionToForm(session) for session in sessions]
         )

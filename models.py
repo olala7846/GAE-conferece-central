@@ -164,6 +164,11 @@ class SessionForms(messages.Message):
     items = messages.MessageField(SessionForm, 1, repeated=True)
 
 
-class SessionMiniForm(messages.Message):
-    """SessionMiniForm -- query session by type"""
+class SessionTypeForm(messages.Message):
+    """SessionTypeForm -- query session by type"""
     sessionType = messages.EnumField('SessionType', 1)
+
+
+class SessionSpeakerForm(messages.Message):
+    """SessionSpeakerForm -- query session by speakerName"""
+    speakerName = messages.StringField(1)
