@@ -3,7 +3,10 @@ import os
 import time
 import uuid
 
+import endpoints
+
 from google.appengine.api import urlfetch
+from google.appengine.ext import ndb
 from models import Profile
 
 
@@ -44,3 +47,20 @@ def getUserId(user, id_type="email"):
             return profile.id()
         else:
             return str(uuid.uuid1().get_hex())
+
+
+def getConferenceFromRequest(request):
+    """
+    Validates and gets conference by 'websafeConferenceKey' inside request
+    throws NotFoundException if no such conference in database
+    """
+    wsck = getattr(request, 'websafeConferenceKey')
+    if not wsck:
+        raise endpoints.NotFoundException('No conference key provided')
+
+    conf = ndb.Key(urlsafe=wsck).get()
+    if not conf:
+        raise endpoints.NotFoundException(
+            'No conference found with key: %s' % wsck)
+
+    return conf

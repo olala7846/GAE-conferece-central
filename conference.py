@@ -32,7 +32,7 @@ from settings import ANDROID_CLIENT_ID
 from settings import IOS_CLIENT_ID
 from settings import ANDROID_AUDIENCE
 
-from utils import getUserId
+from utils import getUserId, getConferenceFromRequest
 
 
 EMAIL_SCOPE = endpoints.EMAIL_SCOPE
@@ -174,12 +174,7 @@ class ConferenceApi(remote.Service):
             raise endpoints.UnauthorizedException('Authorization required')
         user_id = getUserId(user)
 
-        # update existing conference
-        conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
-        # check that conference exists
-        if not conf:
-            raise endpoints.NotFoundException(
-                'No conference found with key: %s' % request.websafeConferenceKey)
+        conf = getConferenceFromRequest(request)
 
         # check that user is owner
         if user_id != conf.organizerUserId:
@@ -225,10 +220,7 @@ class ConferenceApi(remote.Service):
     def getConference(self, request):
         """Return requested conference (by websafeConferenceKey)."""
         # get Conference object from request; bail if not found
-        conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
-        if not conf:
-            raise endpoints.NotFoundException(
-                'No conference found with key: %s' % request.websafeConferenceKey)
+        conf = getConferenceFromRequest(request)
         prof = conf.key.parent().get()
         # return ConferenceForm
         return self._copyConferenceToForm(conf, getattr(prof, 'displayName'))
@@ -509,13 +501,8 @@ class ConferenceApi(remote.Service):
         retval = None
         prof = self._getProfileFromUser()  # get user Profile
 
-        # check if conf exists given websafeConfKey
-        # get conference; check that it exists
-        wsck = request.websafeConferenceKey
-        conf = ndb.Key(urlsafe=wsck).get()
-        if not conf:
-            raise endpoints.NotFoundException(
-                'No conference found with key: %s' % wsck)
+        conf = getConferenceFromRequest(request)
+        wsck = conf.key.urlsafe()
 
         # register
         if reg:
@@ -609,13 +596,8 @@ class ConferenceApi(remote.Service):
             raise endpoints.UnauthorizedException('Authorization required')
         user_id = getUserId(user)
 
-        # update existing conference
-        c_key = ndb.Key(urlsafe=request.websafeConferenceKey)
-        conf = c_key.get()
-        # check that conference exists
-        if not conf:
-            raise endpoints.NotFoundException(
-                'No conference found with key: %s' % request.websafeConferenceKey)
+        conf = getConferenceFromRequest(request)
+        c_key = conf.key
 
         # check that user is owner
         if user_id != conf.organizerUserId:
@@ -676,13 +658,8 @@ class ConferenceApi(remote.Service):
         name='getConferenceSessions')
     def getConferenceSessions(self, request):
         """Gets all the child sessions of the target conference"""
-        conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
-        if not conf:
-            raise endpoints.NotFoundException(
-                'No conference found with key: %s' % request.websafeConferenceKey)
-
-        c_key = ndb.Key(urlsafe=request.websafeConferenceKey)
-        sessions = Session.query(ancestor=c_key)
+        conf = getConferenceFromRequest(request)
+        sessions = Session.query(ancestor=conf.key)
         return SessionForms(
             items=[self._copySessionToForm(session) for session in sessions]
         )
