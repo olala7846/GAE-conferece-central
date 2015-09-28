@@ -39,7 +39,7 @@ use `/mock/mock_conference_data` to test your UI
 ### Task 3: Query and indices
 #### Additional querry
 * `upcomingConferences` shows the latest conferences which haven't started order by time
-* ``
+* `getConferenceAttendee` get all the attendee profile
 [1]: https://developers.google.com/appengine
 [2]: http://python.org
 [3]: https://developers.google.com/appengine/docs/python/endpoints/

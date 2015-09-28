@@ -21,7 +21,8 @@ from google.appengine.api import taskqueue
 from google.appengine.ext import ndb
 
 from models import ConflictException
-from models import Profile, ProfileForm, ProfileMiniForm, TeeShirtSize
+from models import Profile, ProfileForm, ProfileForms
+from models import ProfileMiniForm, TeeShirtSize
 from models import StringMessage, BooleanMessage
 from models import Conference, ConferenceForm, ConferenceForms
 from models import ConferenceQueryForm, ConferenceQueryForms
@@ -761,6 +762,9 @@ class ConferenceApi(remote.Service):
         name='getUpcomingConferences'
     )
     def getUpcomingConferences(self, request):
+        """
+        Get upcomming conference limited to <count> in date order
+        """
         count = 10  # default get 10 conferences
         if request.count and request.count > 0:
             count = request.count
@@ -784,5 +788,24 @@ class ConferenceApi(remote.Service):
         return ConferenceForms(
             items=[self._copyConferenceToForm(conf, names[conf.organizerUserId]) for conf in conferences]
         )
+
+    @endpoints.method(
+        CONF_GET_REQUEST, ProfileForms,
+        path='getConferenceAttendee', http_method='POST',
+        name='getConferenceAttendee'
+    )
+    def getConferenceAttendee(self, request):
+        """
+        Get all user (profile) attending the conference order by name
+        """
+        conf = getConferenceFromRequest(request)
+        wspk = conf.key.urlsafe()
+        profs = Profile.query().\
+            filter(Profile.conferenceKeysToAttend == wspk).\
+            order(Profile.displayName)
+        return ProfileForms(
+            items=[self._copyProfileToForm(prof) for prof in profs]
+        )
+
 
 api = endpoints.api_server([ConferenceApi])  # register API

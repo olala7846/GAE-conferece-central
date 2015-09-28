@@ -178,3 +178,8 @@ class SessionSpeakerForm(messages.Message):
 class UpcomingConferencesForm(messages.Message):
     """UpcomingConferencesForm -- query all upcoming conferences"""
     count = messages.IntegerField(1)  # number of conferences to return
+
+
+class ProfileForms(messages.Message):
+    """ProfileForms -- list of Profile objects"""
+    items = messages.MessageField(ProfileForm, 1, repeated=True)
