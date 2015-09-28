@@ -52,6 +52,9 @@ Let’s say that you don't like workshops and you don't like sessions after 7 pm
 it is impossible to do inequality filter (not WORKSHOP) on `sessionType` and sort by `time` at the same time on Google ndb, because it is actually two inequality filter on different `Proprty` of the same `Entity`.
 To solve this problem we could simply fetch all non-WORKSHOP sessions and loop through it to filter unwanted sessions time or fetch by `time` then loop throught it to filter `sessionType`
 
+### Task 4: Add a Task
+* `getFeaturedSpeaker()` implemented
+* will check for featured speakers when `createSession` called
 
 [1]: https://developers.google.com/appengine
 [2]: http://python.org
