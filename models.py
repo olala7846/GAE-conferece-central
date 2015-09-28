@@ -162,3 +162,8 @@ class SessionForms(messages.Message):
     SessionForms -- multiple SessionForm inbound for sessions
     """
     items = messages.MessageField(SessionForm, 1, repeated=True)
+
+
+class SessionMiniForm(messages.Message):
+    """SessionMiniForm -- query session by type"""
+    sessionType = messages.EnumField('SessionType', 1)

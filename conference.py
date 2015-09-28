@@ -25,7 +25,8 @@ from models import Profile, ProfileForm, ProfileMiniForm, TeeShirtSize
 from models import StringMessage, BooleanMessage
 from models import Conference, ConferenceForm, ConferenceForms
 from models import ConferenceQueryForm, ConferenceQueryForms
-from models import Session, SessionForm, SessionType, SessionForms
+from models import Session, SessionForm, SessionType
+from models import SessionForms, SessionMiniForm
 
 from settings import WEB_CLIENT_ID
 from settings import ANDROID_CLIENT_ID
@@ -77,6 +78,11 @@ CONF_POST_REQUEST = endpoints.ResourceContainer(
 
 SESSION_POST_REQUEST = endpoints.ResourceContainer(
     SessionForm,
+    websafeConferenceKey=messages.StringField(1),
+)
+
+GET_CONF_SESSION_BY_TYPE_REQUEST = endpoints.ResourceContainer(
+    SessionMiniForm,
     websafeConferenceKey=messages.StringField(1),
 )
 
@@ -664,6 +670,18 @@ class ConferenceApi(remote.Service):
             items=[self._copySessionToForm(session) for session in sessions]
         )
 
+    @endpoints.method(
+        GET_CONF_SESSION_BY_TYPE_REQUEST, SessionForms,
+        path='getConferenceSessionsByType', http_method='POST',
+        name='getConferenceSessionsByType')
+    def getConferenceSessionsByType(self, request):
+        """Gets sessions in conference of the specified type"""
+        conf = getConferenceFromRequest(request)
+        sessions = Session.query(ancestor=conf.key).\
+            filter(Session.sessionType == request.sessionType.name)
+        return SessionForms(
+            items=[self._copySessionToForm(session) for session in sessions]
+        )
 
 
 api = endpoints.api_server([ConferenceApi])  # register API
