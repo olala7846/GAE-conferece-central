@@ -155,3 +155,10 @@ class SessionType(messages.Enum):
     KEY_NOTE = 2
     LECTURE = 3
     WORKSHOP = 4
+
+
+class SessionForms(messages.Message):
+    """
+    SessionForms -- multiple SessionForm inbound for sessions
+    """
+    items = messages.MessageField(SessionForm, 1, repeated=True)

@@ -25,7 +25,7 @@ from models import Profile, ProfileForm, ProfileMiniForm, TeeShirtSize
 from models import StringMessage, BooleanMessage
 from models import Conference, ConferenceForm, ConferenceForms
 from models import ConferenceQueryForm, ConferenceQueryForms
-from models import Session, SessionForm, SessionType
+from models import Session, SessionForm, SessionType, SessionForms
 
 from settings import WEB_CLIENT_ID
 from settings import ANDROID_CLIENT_ID
@@ -653,6 +653,35 @@ class ConferenceApi(remote.Service):
     def createSession(self, request):
         """Creates session under certain Conference"""
         return self._createSessionObject(request)
+
+    def _copySessionToForm(self, session):
+        sf = SessionForm()
+        for field in sf.all_fields():
+            if hasattr(session, field.name):
+                if field.name in ['date', 'startTime']:
+                    setattr(cf, field.name, str(getattr(conf, field.name)))
+                else:
+                    setattr(cf, field.name, getattr(conf, field.name))
+            elif field.name == "websafeKey":
+                setattr(cf, field.name, conf.key.urlsafe())
+
+    @endpoints.method(
+        CONF_GET_REQUEST, SessionForms,
+        path='getConferenceSessions', http_method='GET',
+        name='getConferenceSessions')
+    def getConferenceSessions(self, request):
+        """Gets all the child sessions of the target conference"""
+        conf = ndb.Key(urlsafe=request.websafeConferenceKey).get()
+        if not conf:
+            raise endpoints.NotFoundException(
+                'No conference found with key: %s' % request.websafeConferenceKey)
+
+        c_key = ndb.Key(urlsafe=request.websafeConferenceKey)
+        sessions = Session.query(ancestor=c_key)
+        return SessionForms(
+            items=[self._copySessionToForm(session) for session in sessions]
+        )
+
 
 
 api = endpoints.api_server([ConferenceApi])  # register API
