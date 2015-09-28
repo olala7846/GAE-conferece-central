@@ -46,8 +46,18 @@ class MockConferenceData(webapp2.RequestHandler):
         self.response.write('Mock Success')
 
 
+class CheckForFeaturedSpeaker(webapp2.RequestHandler):
+    def post(self):
+        """
+        Check if there is more than one session by a speaker single conference
+        """
+        wssk = self.request.get('websafeSessionKey')
+        ConferenceApi._checkForFeaturedSpeaker(wssk)
+
+
 app = webapp2.WSGIApplication([
     ('/crons/set_announcement', SetAnnouncementHandler),
     ('/tasks/send_confirmation_email', SendConfirmationEmailHandler),
+    ('/tasks/check_featured_speaker', CheckForFeaturedSpeaker),
     ('/mock/mock_conference_data', MockConferenceData),
 ], debug=True)

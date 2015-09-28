@@ -41,6 +41,7 @@ from utils import getUserId, getConferenceFromRequest, getSessionFromRequest
 EMAIL_SCOPE = endpoints.EMAIL_SCOPE
 API_EXPLORER_CLIENT_ID = endpoints.API_EXPLORER_CLIENT_ID
 MEMCACHE_ANNOUNCEMENTS_KEY = "RECENT_ANNOUNCEMENTS"
+MEMCACHE_FEAETURED_SPEAKERS = "FEATURED_SPEAKERS"
 ANNOUNCEMENT_TPL = ('Last chance to attend! The following conferences '
                     'are nearly sold out: %s')
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -626,10 +627,13 @@ class ConferenceApi(remote.Service):
         if data['date']:
             data['date'] = datetime.strptime(data['date'][:10], "%Y-%m-%d").date()
         else:
-            date['date'] = conf.startDate
+            data['date'] = conf.startDate
+
+        if data['sessionType']:
+            data['sessionType'] = data['sessionType'].name
 
         if data['startTime']:
-            data['endDate'] = datetime.strptime(data['endDate'][:8], "%H:%M:%S").time()
+            data['startTime'] = datetime.strptime(data['startTime'][:8], "%H:%M:%S").time()
 
         # generate Session Key based on user ID and Conference
         # ID based on Conference key get Session key from ID
@@ -640,14 +644,19 @@ class ConferenceApi(remote.Service):
         # create Session, send email to organizer confirming
         # creation of Conference & return (modified) ConferenceForm
         Session(**data).put()
-        return StringMessage(data="success")
+        return s_key
 
     @endpoints.method(
         SESSION_POST_REQUEST, StringMessage,
         path='session', http_method='POST', name='createSession')
     def createSession(self, request):
         """Creates session under certain Conference"""
-        return self._createSessionObject(request)
+        s_key = self._createSessionObject(request)
+        taskqueue.add(
+            url='/tasks/check_featured_speaker', method='POST',
+            params={'websafeSessionKey': s_key.urlsafe()},
+        )
+        return StringMessage(data="success")
 
     def _copySessionToForm(self, session):
         sf = SessionForm()
@@ -806,6 +815,30 @@ class ConferenceApi(remote.Service):
         return ProfileForms(
             items=[self._copyProfileToForm(prof) for prof in profs]
         )
+
+# - - - Featured Speaker (Task 4)- - - - - - - - - - - - - - - - - - - -
+
+    @classmethod
+    def _checkForFeaturedSpeaker(self, websafeSessionKey):
+        """
+        Checks if the session speaker is featured
+        If so, add it the memcache
+        """
+        session = ndb.Key(urlsafe=websafeSessionKey).get()
+        speakerName = session.speakerName
+
+        # count number of session in the same conference
+        # faving the same speaker as this session
+        session_cnt = Session.query(ancestor=session.key.parent()).\
+            filter(Session.speakerName == speakerName).count()
+        if session_cnt > 1:
+            # is featured speaker
+            announcement = """
+                Featured session!
+                Speaker: {}
+                sessions: {}
+            """.format(session.speakerName, session.name)
+            memcache.set(MEMCACHE_FEAETURED_SPEAKERS, announcement)
 
 
 api = endpoints.api_server([ConferenceApi])  # register API
