@@ -736,5 +736,22 @@ class ConferenceApi(remote.Service):
         """
         return self._addSessionToWishList(request)
 
+    @endpoints.method(
+        message_types.VoidMessage, SessionForms,
+        path='getSessionsInWishlist', http_method='GET',
+        name='getSessionsInWishlist'
+    )
+    def getSessionsInWishlist(self, request):
+        """
+        List all sessions in wishlist for sign in user
+        """
+        prof = self._getProfileFromUser()
+        session_websafe_keys = prof.sessionWishList
+        session_keys = [ndb.Key(urlsafe=wssk) for wssk in session_websafe_keys]
+        sessions = ndb.get_multi(session_keys)
+        return SessionForms(
+            items=[self._copySessionToForm(session) for session in sessions]
+        )
+
 
 api = endpoints.api_server([ConferenceApi])  # register API
