@@ -63,6 +63,9 @@ def getConferenceFromRequest(request):
         raise endpoints.NotFoundException(
             'No conference found with key: %s' % wsck)
 
+    if not isinstance((session, 'Conference')):
+        raise endpoints.NotFoundException('No Conference Found With Key')
+
     return conf
 
 
@@ -79,5 +82,8 @@ def getSessionFromRequest(request):
     if not session:
         raise endpoints.NotFoundException(
             'No conference foud with key: %s' % wssk)
+
+    if not isinstance((session, 'Session')):
+        raise endpoints.NotFoundException('No Session Found With Key')
 
     return session

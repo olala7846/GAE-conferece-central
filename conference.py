@@ -656,7 +656,7 @@ class ConferenceApi(remote.Service):
             url='/tasks/check_featured_speaker', method='POST',
             params={'websafeSessionKey': s_key.urlsafe()},
         )
-        return StringMessage(data="success")
+        return self._copySessionToForm(s_key.get())
 
     def _copySessionToForm(self, session):
         sf = SessionForm()
@@ -665,7 +665,7 @@ class ConferenceApi(remote.Service):
                 if field.name in ['date', 'startTime']:
                     setattr(sf, field.name, str(getattr(session, field.name)))
                 elif field.name == 'sessionType':
-                    setattr(sf, field.name, getattr(SessionType, getattr(session, field.name)))
+                    setattr(sf, field.name, getattr(SessionType, getattr(session, field.name), 'NOT_SPECIFIED'))
                 else:
                     setattr(sf, field.name, getattr(session, field.name))
             elif field.name == "websafeKey":
@@ -807,7 +807,16 @@ class ConferenceApi(remote.Service):
         """
         Get all user (profile) attending the conference order by name
         """
+
+        user = endpoints.get_current_user()
+        if not user:
+            raise endpoints.UnauthorizedException('Authorization required')
+        user_id = getUserId(user)
         conf = getConferenceFromRequest(request)
+        owner_profile = conf.key.parent().get()
+        if owner_profile.mainEmail != user_id:
+            raise endpoints.UnauthorizedException('Conference owner only')
+
         wspk = conf.key.urlsafe()
         profs = Profile.query().\
             filter(Profile.conferenceKeysToAttend == wspk).\

@@ -147,7 +147,7 @@ class SessionForm(messages.Message):
     sessionType = messages.EnumField('SessionType', 5)
     date = messages.StringField(6)  # DateProperty()
     startTime = messages.StringField(7)  # TimeProperty()
-    websafeKey = messages.StringField(8)  # ndb conference id in websafe form
+    websafeKey = messages.StringField(8)  # ndb session id in websafe form
 
 
 class SessionType(messages.Enum):
