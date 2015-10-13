@@ -1,6 +1,10 @@
 # Conference Centrol
-This is a App Engine application for the Udacity training course.
-Cloned and modified by olala7846@gmail.com
+Conference centrol site using App Engine and Cloud endpoint.
+**WARNING!** This is project 4 of the udacity full-stack nanodegree, be careful if you want to do it yourself.
+
+Cloned from Udacity and modified by olala7846@gmail.com
+
+hosted [here:](https://olala-udacity-projects.appspot.com/)
 
 ## Framework and language
 - [App Engine][1]
